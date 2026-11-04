@@ -18,11 +18,13 @@ import recBrown from '../assets/figma/rec-brown.png';
 import type { Product } from '../types';
 
 interface ProductPageProps {
+  product?: Product;
   onBackToHome: () => void;
   onAddToCart: (product: Product, size: string, color: string) => void;
 }
 
 export const ProductPage: React.FC<ProductPageProps> = ({
+  product,
   onBackToHome,
   onAddToCart,
 }) => {
@@ -33,7 +35,7 @@ export const ProductPage: React.FC<ProductPageProps> = ({
   const sizes = ['S', 'M', 'L', 'XL'];
   const colors = ['Sea Foam', 'Washed Black', 'Vintage White'];
 
-  const currentProduct: Product = {
+  const defaultProduct: Product = {
     id: 'prod-4',
     name: "Pros de l'internet T-Shirt",
     price: 30.0,
@@ -43,6 +45,10 @@ export const ProductPage: React.FC<ProductPageProps> = ({
     category: 'apparel',
     description: `Sea foam T-Shirt 100% cotton. "Pros de l'internet" graphic printed at back and Locomotive glyph printed at front pocket. Made in Los Angeles.`,
   };
+
+  // "Pros de l'internet T-Shirt" (prod-4) mantém o layout completo com lookbook.
+  const currentProduct: Product = product && product.id !== 'prod-4' ? product : defaultProduct;
+  const isCustom = currentProduct !== defaultProduct;
 
   const recommendations = [
     { id: 'rec-1', name: 'Leather Bomber Jacket', price: '$180.00 USD', image: recBlack },
@@ -76,25 +82,25 @@ export const ProductPage: React.FC<ProductPageProps> = ({
             data-product-hover="true"
           >
             <img 
-              src={pdpHero} 
-              alt="Pros de l'internet T-Shirt Back Fit" 
+              src={currentProduct.image} 
+              alt={currentProduct.name} 
               className="pdp-main-image"
             />
           </div>
 
           <p className="pdp-description-text" data-node-id="21:18">
-            Sea foam T-Shirt 100% cotton. &quot;Pros de l&apos;internet&quot; graphic printed at back and Locomotive glyph printed at front pocket. Made in Los Angeles.
+            {currentProduct.description}
           </p>
         </div>
 
         {/* Right Column: Title, Price, Color, Size & Add to card */}
         <div className="pdp-right-col">
           <h1 className="pdp-product-title" data-node-id="21:7">
-            Pros de l&apos;internet<br />T-Shirt
+            {isCustom ? currentProduct.name : <>Pros de l&apos;internet<br />T-Shirt</>}
           </h1>
 
           <p className="pdp-product-price" data-node-id="22:41">
-            $30.00 USD
+            {currentProduct.priceFormatted}
           </p>
 
           {/* Color Selector */}
@@ -165,7 +171,18 @@ export const ProductPage: React.FC<ProductPageProps> = ({
         </div>
       </section>
 
+      {isCustom && (currentProduct.images?.length ?? 0) > 1 && (
+        <section className="pdp-product-gallery" aria-label="Product images">
+          {currentProduct.images!.slice(1).map((src, i) => (
+            <div key={i} className="pdp-gallery-item" data-product-hover="true">
+              <img src={src} alt={currentProduct.name} />
+            </div>
+          ))}
+        </section>
+      )}
+
       {/* Lookbook Gallery / Editorial Grid */}
+      {!isCustom && (
       <section className="pdp-lookbook-section" aria-label="Galeria de Detalhes">
         <div className="pdp-lookbook-row-1">
           <div 
@@ -223,6 +240,7 @@ export const ProductPage: React.FC<ProductPageProps> = ({
           </div>
         </div>
       </section>
+      )}
 
       {/* "See More" Section */}
       <section className="pdp-see-more-section" aria-label="Recomendações See More">

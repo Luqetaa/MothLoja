@@ -47,6 +47,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  overflow-x: clip;
   min-height: 100vh;
 }
 
@@ -93,14 +94,55 @@ button {
   }
 }
 
-/* ================= HEADER ================= */
+/* ================= PROGRESSIVE BLUR (ESTILO BENCHO.DEV/FINDS) ================= */
+/* No topo absoluto da janela há camadas de desfoque progressivo (multi-layer gradient blur).
+   100% transparente (sem coloração branca), sem linhas divisórias e sem cortes bruscos,
+   fazendo com que os cards de conteúdo da galeria se dissolvam suavemente à medida que
+   entram sob a área de navegação ao rolar a página. */
+.progressive-blur-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 150px;
+  pointer-events: none;
+  z-index: 38;
+  overflow: hidden;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+@media (max-width: 768px) {
+  .progressive-blur-container {
+    height: 105px;
+  }
+}
+
+.progressive-blur-step {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: transparent;
+  transform: translateZ(0);
+}
+
+/* ================= HEADER (TRANSPARENTE E SEM DIVISÃO) ================= */
+/* Navbar estática no scroll, 100% transparente, sem linha divisória, sem borda e sem
+   nenhum corte abrupto. O desfoque suave contínuo é garantido pelo ProgressiveBlur. */
 .site-header {
   position: sticky;
   top: 0;
   z-index: 40;
-  background: #ffffff;
   width: 100%;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  background: transparent;
+  background-color: transparent;
+  border: none;
+  border-bottom: none;
+  box-shadow: none;
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .header-inner {
@@ -112,6 +154,7 @@ button {
   justify-content: space-between;
   position: relative;
   height: 96px;
+  z-index: 2;
 }
 
 .header-left {
@@ -546,10 +589,23 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 36px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  margin-bottom: 28px;
   position: relative;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+}
+
+.toolbar-label {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  color: var(--color-text-main);
+  letter-spacing: -0.01em;
+  font-weight: 400;
+  line-height: 1.2;
+  user-select: none;
 }
 
 .toolbar-btn {
@@ -624,7 +680,7 @@ button {
 .products-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 32px;
+  gap: 0;
 }
 
 .product-card {
@@ -641,7 +697,7 @@ button {
   aspect-ratio: 4 / 5;
   background-color: #f2f2f2;
   overflow: hidden;
-  border-radius: var(--radius-card);
+  border-radius: 0;
 }
 
 .product-image {
@@ -658,11 +714,12 @@ button {
 }
 
 .product-bottom-bar {
-  margin-top: 16px;
+  margin-top: 14px;
+  padding: 0 16px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
 }
 
 .product-details {
@@ -1065,7 +1122,6 @@ button {
 .pdp-editorial-footer {
   margin-top: 220px;
   padding-top: 60px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 40px;
@@ -1290,7 +1346,6 @@ button {
 
 /* Footer (Home) */
 .site-footer {
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
   padding: 60px 32px 40px 32px;
   max-width: 1920px;
   margin: 0 auto;
@@ -1366,7 +1421,7 @@ button {
   }
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
+    gap: 0;
   }
   .pdp-hero-grid {
     grid-template-columns: 1fr;
@@ -1407,7 +1462,7 @@ button {
   }
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+    gap: 0;
   }
   .product-page-container {
     padding: 16px;
@@ -1458,4 +1513,181 @@ button {
   .pdp-size-label {
     font-size: 26px;
   }
+}
+
+/* ================= CATALOG TEMPLATES (PLACEHOLDERS) ================= */
+.catalog-templates {
+  display: flex;
+  flex-direction: column;
+  gap: 96px;
+  margin-top: 96px;
+}
+
+.tpl-image {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  background-color: #f2f2f2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 48px;
+  color: var(--color-text-muted);
+  user-select: none;
+}
+
+.tpl-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px 0;
+}
+
+.tpl-two-large .tpl-text {
+  padding: 0 0 14px;
+}
+
+.tpl-item > .tpl-text:first-child {
+  padding: 0 16px 14px;
+}
+
+.tpl-title {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.tpl-price {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 400;
+  color: #222222;
+}
+
+/* Template 1 */
+.tpl-two-large-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px;
+}
+
+/* Template 2 */
+.tpl-carousel {
+  position: relative;
+}
+
+.tpl-carousel-track {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.tpl-carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+.tpl-carousel-track .tpl-item {
+  flex: 0 0 calc((100% - 48px) / 3);
+  scroll-snap-align: start;
+}
+
+.tpl-carousel .tpl-image {
+  font-size: 32px;
+}
+
+.tpl-arrow {
+  position: absolute;
+  top: 40%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  font-size: 32px;
+  font-weight: 300;
+  line-height: 1;
+  transition: opacity 0.3s ease;
+}
+
+.tpl-arrow:hover {
+  opacity: 0.6;
+}
+
+.tpl-arrow-prev {
+  left: 0;
+}
+
+.tpl-arrow-next {
+  right: 0;
+}
+
+/* Template 3 */
+.tpl-three-medium {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .catalog-templates {
+    gap: 64px;
+    margin-top: 64px;
+  }
+
+  .tpl-two-large-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tpl-carousel-track .tpl-item {
+    flex-basis: 66%;
+  }
+
+  .tpl-arrow {
+    display: none;
+  }
+
+  .tpl-three-medium {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Templates 1 e 2 mais estreitos que o template 3 no eixo X */
+.tpl-two-large,
+.tpl-carousel {
+  width: 70%;
+  margin-inline: auto;
+}
+
+@media (max-width: 768px) {
+  .tpl-two-large,
+  .tpl-carousel {
+    width: 100%;
+  }
+}
+
+/* Templates 1 e 2 um pouco mais altos */
+.tpl-two-large .tpl-image,
+.tpl-carousel .tpl-image {
+  aspect-ratio: 3 / 4;
+}
+
+.tpl-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pdp-product-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2px;
+  margin: 64px 0;
+}
+
+.pdp-product-gallery img {
+  width: 100%;
+  display: block;
 }

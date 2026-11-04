@@ -5,6 +5,7 @@ export interface Product {
   currency: string;
   priceFormatted: string;
   image: string;
+  images?: string[];
   category: 'accessories' | 'apparel' | 'headwear';
   description?: string;
 }

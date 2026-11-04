@@ -1,10 +1,12 @@
 import { useState, useMemo, useRef } from 'react';
 import { SmoothScroll } from './components/SmoothScroll';
+import { ScrollToTop } from './components/ScrollToTop';
 import { ProductCursor } from './components/ProductCursor';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
-import { CatalogToolbar, type SortOption } from './components/CatalogToolbar';
+import { CatalogToolbar } from './components/CatalogToolbar';
 import { ProductCard } from './components/ProductCard';
+import { CatalogTemplates } from './components/CatalogTemplates';
 import { ProductPage } from './components/ProductPage';
 import { CartDrawer } from './components/CartDrawer';
 import { FilterDrawer } from './components/FilterDrawer';
@@ -13,15 +15,42 @@ import { Footer } from './components/Footer';
 import { PRODUCTS } from './data/products';
 import type { Product, CartItem } from './types';
 import { gsap, useGSAP } from './lib/gsap';
+import { Routes, Route, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom';
+import { findProductBySlug, productPath } from './data/allProducts';
+
+function ProductRoute({
+  onAddToCart,
+}: {
+  onAddToCart: (product: Product, size?: string, color?: string) => void;
+}) {
+  const { slug } = useParams();
+  const navigate = useNavigate();
+  const product = findProductBySlug(slug);
+
+  if (!product) return <Navigate to="/" replace />;
+
+  return (
+    <ProductPage
+      key={slug}
+      product={product}
+      onBackToHome={() => {
+        window.dispatchEvent(new CustomEvent('app:reset-scroll'));
+        navigate('/');
+      }}
+      onAddToCart={onAddToCart}
+    />
+  );
+}
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<'home' | 'product'>('home');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isHome = location.pathname === '/';
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [sortOption, setSortOption] = useState<SortOption>('default');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [inStockOnly, setInStockOnly] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -87,7 +116,7 @@ export default function App() {
     });
   };
 
-  // Filter & Sort Logic
+  // Filter Logic
   const processedProducts = useMemo(() => {
     let result = [...PRODUCTS];
 
@@ -95,22 +124,8 @@ export default function App() {
       result = result.filter((p) => p.category === selectedCategory);
     }
 
-    switch (sortOption) {
-      case 'price-asc':
-        result.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-desc':
-        result.sort((a, b) => b.price - a.price);
-        break;
-      case 'name-asc':
-        result.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      default:
-        break;
-    }
-
     return result;
-  }, [selectedCategory, sortOption]);
+  }, [selectedCategory]);
 
   const activeFilterCount = (selectedCategory !== 'all' ? 1 : 0) + (inStockOnly ? 1 : 0) || 2;
   const totalCartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -125,7 +140,7 @@ export default function App() {
 
   // Product Grid Stagger Scroll Animation with useGSAP
   useGSAP(() => {
-    if (currentView !== 'home' || !catalogRef.current) return;
+    if (!isHome || !catalogRef.current) return;
 
     gsap.from('.product-card', {
       scrollTrigger: {
@@ -140,15 +155,16 @@ export default function App() {
       stagger: 0.15,
       ease: 'power3.out',
     });
-  }, { scope: catalogRef, dependencies: [processedProducts, currentView] });
+  }, { scope: catalogRef, dependencies: [processedProducts, isHome] });
 
-  const handleSelectProduct = () => {
-    setCurrentView('product');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleSelectProduct = (product: Product) => {
+    window.dispatchEvent(new CustomEvent('app:reset-scroll'));
+    navigate(productPath(product));
   };
 
   return (
     <SmoothScroll>
+      <ScrollToTop />
       <div className="moth-store-app" data-node-id="1:3">
         {/* Floating "Click" text only on hover over products, no circles, no border */}
         <ProductCursor />
@@ -167,18 +183,19 @@ export default function App() {
           }}
           onOpenSearch={() => setIsSearchOpen(true)}
           onLogoClick={() => {
-            setCurrentView('home');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.dispatchEvent(new CustomEvent('app:reset-scroll'));
+            navigate('/');
           }}
           onSelectCategory={(category) => {
-            setCurrentView('home');
+            navigate('/');
             triggerToast(`Coleção ${category === 'men' ? 'Masculina (Men)' : 'Feminina (Women)'} selecionada.`);
-            catalogRef.current?.scrollIntoView({ behavior: 'smooth' });
+            requestAnimationFrame(() => catalogRef.current?.scrollIntoView({ behavior: 'smooth' }));
           }}
         />
 
         <main>
-          {currentView === 'home' ? (
+          <Routes>
+            <Route path="/" element={
             <>
               {/* Hero Section: Parallax & Interactive 3D "Locomotive ® drop" */}
               <Hero />
@@ -189,10 +206,8 @@ export default function App() {
                 className="catalog-section" 
                 aria-label="Catálogo de Produtos"
               >
-                {/* Order by + / [2] Filter */}
+                {/* Toolbar: New drop: / [2] Filter */}
                 <CatalogToolbar
-                  currentSort={sortOption}
-                  onSortChange={setSortOption}
                   activeFilterCount={activeFilterCount}
                   onToggleFilter={() => setIsFilterOpen(true)}
                 />
@@ -212,21 +227,20 @@ export default function App() {
                     />
                   ))}
                 </div>
+
+                {/* Templates de catálogo (placeholders) */}
+                <CatalogTemplates onSelectProduct={handleSelectProduct} />
               </section>
 
               {/* Footer */}
               <Footer />
             </>
-          ) : (
-            /* Product Detail Page from Node 19:3 */
-            <ProductPage
-              onBackToHome={() => {
-                setCurrentView('home');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              onAddToCart={(prod, size, color) => handleAddToCart(prod, size, color)}
-            />
-          )}
+            } />
+
+            {/* Product Detail Page from Node 19:3: uma rota por produto */}
+            <Route path="/product/:slug" element={<ProductRoute onAddToCart={handleAddToCart} />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </main>
 
         {/* Interactive Drawers & Modals */}
@@ -252,7 +266,7 @@ export default function App() {
           onClose={() => setIsSearchOpen(false)}
           products={PRODUCTS}
           onSelectProduct={(p) => {
-            handleSelectProduct();
+            handleSelectProduct(p);
             handleAddToCart(p);
           }}
         />
